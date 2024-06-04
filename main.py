@@ -30,7 +30,7 @@ def main():
 
 def search(t):
     print('[bold white on #005acd] Buscar mangá [/]\n')
-    query = inquirer.text(message="", qmark=">").execute() if t == None else t
+    query = inquirer.text(message="", qmark=">", amark=">").execute() if t == None else t
 
     r = f'https://lermangas.me/?s={query}&post_type=wp-manga'
     
@@ -53,7 +53,8 @@ def search(t):
         choices=list(mangas.keys()),
         multiselect=False,
         pointer="❚",
-        qmark=">"
+        qmark=">",
+        amark=">"
     ).execute()
 
     get_chapter(mangas[selected], selected.lower().replace(' ','_'))
@@ -70,11 +71,14 @@ def get_chapter(link,title):
         multiselect=True,
         pointer="❚",
         marker=" * ",
-        qmark=">"
+        qmark=">",
+        amark=">"
     ).execute()
-
+    
+    os.system('cls')
+    print('[bold white on #005acd] Lendo [/]\n')
     for i in selected:
-        print(f'{title}_{i.lower().replace(" ","_")}')    
+        print(f'[#005acd]Baixando[/] {i}')
         download(ch[i], f'{title}_{i.lower().replace(' ','_')}',title, i.lower().replace(' ','_'))
     
     sys.exit()
@@ -101,7 +105,7 @@ def download(src, title, directory, chapter):
 
     os.mkdir(f'{path}\\{directory}\\{chapter}\\images')
 
-    for i in track(range(len(pgs)),description="Download..."):
+    for i in track(range(len(pgs)),description=f'[#005acd]Carregando[/] {len(pgs)} páginas'):
         with open(f'{path}\\{directory}\\{chapter}\\images/pic{i:02d}.jpg', 'wb') as handle:
             response = requests.get(pgs[i], stream=True)
 
@@ -114,7 +118,7 @@ def download(src, title, directory, chapter):
 
                 handle.write(block)
 
-    print("[b][i]Processando Arquivo...")
+    print("[#005acd]Processando[/] arquivo...")
     create_PDF(title, f'{path}\\{directory}\\{chapter}')
 
 def create_PDF(filename,directory):
