@@ -29,7 +29,8 @@ def main():
     search(t=args.query)
 
 def search(t):
-    query = inquirer.text(message="Buscar:", qmark="", amark="").execute() if t == None else t
+    print('[bold white on #005acd] Buscar mangá [/]\n')
+    query = inquirer.text(message="", qmark=">").execute() if t == None else t
 
     r = f'https://lermangas.me/?s={query}&post_type=wp-manga'
     
@@ -45,11 +46,14 @@ def search(t):
         print("[b][red]N Existe.[/red][/b]")
         sys.exit(0)
 
+    print('[bold white on #005acd] Resultados [/]\n')
+
     selected = inquirer.select(
-        message="S: ",
+        message="Selecione o mangá: ",
         choices=list(mangas.keys()),
         multiselect=False,
-        pointer=">"
+        pointer="❚",
+        qmark=">"
     ).execute()
 
     get_chapter(mangas[selected], selected.lower().replace(' ','_'))
@@ -64,8 +68,9 @@ def get_chapter(link,title):
         message="Capítulo(s): ",
         choices=list(reversed(ch.keys())),
         multiselect=True,
-        pointer=">",
-        marker="# "
+        pointer="❚",
+        marker=" * ",
+        qmark=">"
     ).execute()
 
     for i in selected:
