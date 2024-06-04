@@ -4,6 +4,8 @@ from PIL import Image
 
 import argparse
 
+from time import sleep
+
 import webbrowser
 
 from bs4 import BeautifulSoup
@@ -43,8 +45,10 @@ def search(t):
         mangas[link.a.getText().strip()] = link.a.get('href')
     
     if not mangas:
-        print("[b][red]N Existe.[/red][/b]")
-        sys.exit(0)
+        print('[bold white on red] Mangá não encontrado[/]\n')
+        print('Voltando para tela de busca...')
+        sleep(1)
+        main()
 
     print('[bold white on #005acd] Resultados [/]\n')
 
