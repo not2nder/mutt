@@ -9,7 +9,8 @@ import webbrowser
 from bs4 import BeautifulSoup
 
 import requests
-from pick import pick
+
+from InquirerPy import inquirer
 from rich import print
 from rich.progress import track
 
@@ -17,7 +18,7 @@ path = f'{os.path.expanduser('~')}\\Documents\\mutt'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t","--title", required=False)
+    parser.add_argument("-q","--query", required=False)
 
     args = parser.parse_args()
 
@@ -25,17 +26,10 @@ def main():
         os.mkdir(path)
 
     os.system('cls')
-    search(t=args.title)
-
-def textBox(string):
-    text  = f'╭─{''.join(['─' for i in range(len(string)+1)])}╮\n'
-    text += f'│ {string} │\n'
-    text += f'╰─{''.join(['─' for i in range(len(string)+1)])}╯'
-
-    return text
+    search(t=args.query)
 
 def search(t):
-    query = input("Buscar:") if t ==None else t
+    query = inquirer.text(message="Buscar:", qmark="", amark="").execute() if t == None else t
 
     r = f'https://lermangas.me/?s={query}&post_type=wp-manga'
     
@@ -51,7 +45,13 @@ def search(t):
         print("[b][red]N Existe.[/red][/b]")
         sys.exit(0)
 
-    selected = pick(list(mangas.keys()), title=textBox(f"Busca: {query} | Use J e K Para Navegar"), indicator="->")[0]
+    selected = inquirer.select(
+        message="S: ",
+        choices=list(mangas.keys()),
+        multiselect=False,
+        pointer=">"
+    ).execute()
+
     get_chapter(mangas[selected], selected.lower().replace(' ','_'))
 
 def get_chapter(link,title):
@@ -59,16 +59,27 @@ def get_chapter(link,title):
     ch = {}
     for c in soup.findAll('li', class_='wp-manga-chapter'):
         ch[c.a.getText().replace('\t','').replace('\n', '')] = c.a.get('href')
+    
+    selected = inquirer.select(
+        message="Capítulo(s): ",
+        choices=list(reversed(ch.keys())),
+        multiselect=True,
+        pointer=">",
+        marker="# "
+    ).execute()
 
-    selected = pick(list(reversed(ch.keys())),title=textBox("Capitulos | Use J e K Para Navegar"), indicator="->")[0]
-    download(ch[selected], f'{title}_{selected.lower().replace(' ','_')}',title, selected.lower().replace(' ','_'))
+    for i in selected:
+        print(f'{title}_{i.lower().replace(" ","_")}')    
+        download(ch[i], f'{title}_{i.lower().replace(' ','_')}',title, i.lower().replace(' ','_'))
+    
+    sys.exit()
 
-def download(src, name, directory, chapter):
-    #src = link (https://...)
-    #title = nome do pdf (Ex.: jjk_cap_1.pdf)
-    #directory = pasta do manga (Ex.: jujutsu_kaisen/)
-    #path pasta da aplicaçao (mutt/)
-    #chapter = nome da pasta dentro de manga (Ex.: Capitulo_1/)
+def download(src, title, directory, chapter):
+    # src = link (https://...)
+    # title = nome do pdf (Ex.: jjk_cap_1.pdf)
+    # directory = pasta do manga (Ex.: jujutsu_kaisen/)
+    # path pasta da aplicaçao (mutt/)
+    # chapter = nome da pasta dentro de manga (Ex.: Capitulo_1/)
 
     if not(os.path.exists(f'{path}/{directory}')):
         os.mkdir(f'{path}/{directory}')
@@ -99,7 +110,7 @@ def download(src, name, directory, chapter):
                 handle.write(block)
 
     print("[b][i]Processando Arquivo...")
-    create_PDF(name, f'{path}\\{directory}\\{chapter}')
+    create_PDF(title, f'{path}\\{directory}\\{chapter}')
 
 def create_PDF(filename,directory):
     images = [Image.open(f'{directory}\\images/{i}') for i in os.listdir(f'{directory}/images/') if i.endswith('.jpg')]
@@ -108,7 +119,6 @@ def create_PDF(filename,directory):
         if file.endswith('.jpg'):
             os.remove(f'{directory}/images/{file}')
     webbrowser.open_new(f'{directory}\\{filename}.pdf')
-    sys.exit(0)
 
 if __name__ == '__main__':
     main()
